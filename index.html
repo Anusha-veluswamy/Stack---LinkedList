@@ -1,0 +1,645 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Linked List Stack Explorer</title>
+<style>
+
+:root{
+  --head:#2E1A36; --th:#2E1A36; --heading:#2E1A36; --primary:#2E1A36; --primary-h:#452A50; --on-primary:#FFFFFF;
+  --accent:#B06F00; --accent-l:#FCEFD2; --accent-m:#F0C86E; --accent-fill:#E9A91F; --on-accent:#2E1A36;
+  --prevc:#6B4FA0; --prevc-l:#ECE6F7;
+  --nullc:#A12A1E; --null-l:#F9DEDA;
+  --ink:#221A26; --muted:#6B5F70; --surface:#F7F3F8; --line:#E2D9E5; --bg:#FFFFFF; --card:#FFFFFF;
+  --code:#2E1A36; --code-ink:#F3EAF5;
+  --serif:Cambria,"Source Serif Pro",Georgia,serif;
+  --sans:Calibri,"Segoe UI",system-ui,-apple-system,Arial,sans-serif;
+  --mono:"Courier New",ui-monospace,Menlo,Consolas,monospace;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --head:#1A0F20; --th:#3A2544; --heading:#F1E4F5; --primary:#E9A91F; --primary-h:#F5BD3E; --on-primary:#2E1A36;
+    --accent:#F0B43C; --accent-l:#3D2E12; --accent-m:#8A6620; --accent-fill:#E9A91F; --on-accent:#2E1A36;
+    --prevc:#B79CEB; --prevc-l:#2E2440;
+    --nullc:#F29A8E; --null-l:#4A1F1B;
+    --ink:#EDE6F0; --muted:#A99BB0; --surface:#22172A; --line:#3A2C42; --bg:#150E1A; --card:#1D1424;
+    --code:#1A0F20; --code-ink:#F3EAF5;
+  }
+}
+:root[data-theme="dark"]{
+  --head:#1A0F20; --th:#3A2544; --heading:#F1E4F5; --primary:#E9A91F; --primary-h:#F5BD3E; --on-primary:#2E1A36;
+  --accent:#F0B43C; --accent-l:#3D2E12; --accent-m:#8A6620; --accent-fill:#E9A91F; --on-accent:#2E1A36;
+  --prevc:#B79CEB; --prevc-l:#2E2440;
+  --nullc:#F29A8E; --null-l:#4A1F1B;
+  --ink:#EDE6F0; --muted:#A99BB0; --surface:#22172A; --line:#3A2C42; --bg:#150E1A; --card:#1D1424;
+  --code:#1A0F20; --code-ink:#F3EAF5;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px);background:var(--bg)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.45}
+button,input{font:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+code{font-family:var(--mono);font-size:.9em;background:var(--card);padding:1px 5px;border-radius:4px}
+
+header{background:var(--head);color:#fff;padding:28px clamp(16px,4vw,48px) 0}
+h1{font-family:var(--serif);font-size:clamp(28px,4vw,40px);line-height:1.1;margin:0 0 6px}
+header p{margin:0 0 22px;color:#DCCBE3;max-width:76ch}
+.picker{display:flex;gap:4px;flex-wrap:wrap}
+.picker button{border:0;background:transparent;color:#DCCBE3;padding:10px 14px;border-radius:8px 8px 0 0;font-size:15px}
+.picker button:hover{color:#fff;background:rgba(255,255,255,.08)}
+.picker button[aria-pressed="true"]{background:var(--bg);color:var(--heading);font-weight:700}
+
+main{display:grid;grid-template-columns:minmax(340px,440px) minmax(0,1fr);gap:32px;padding:28px clamp(16px,4vw,48px) 56px;max-width:1500px}
+aside{min-width:0}
+.sticky{position:sticky;top:12px}
+aside h2{font-family:var(--serif);font-size:24px;line-height:1.15;margin:0 0 8px;color:var(--heading)}
+pre.code{background:var(--code);color:var(--code-ink);font-family:var(--mono);font-size:13.5px;line-height:1.5;padding:12px 0;border-radius:10px;margin:0 0 14px;overflow:auto;max-height:calc(100vh - 230px);min-height:260px}
+pre.code .ln{display:block;padding:0 14px 0 0;white-space:pre}
+pre.code .no{display:inline-block;width:34px;text-align:right;margin-right:12px;color:#8A7894;user-select:none}
+pre.code .ln.now{background:rgba(245,192,74,.22);box-shadow:inset 4px 0 0 #F5C04A}
+pre.code .kw{color:#F5C04A;font-weight:700}
+pre.code .str{color:#A8E0B0}
+pre.code .cm{color:#B49DBE;font-style:italic}
+pre.code .bi{color:#8FC8FF}
+.tip{background:var(--accent-l);border-radius:10px;padding:12px 14px;font-size:15px;margin:0}
+.tip strong{color:var(--heading)}
+
+.stage-wrap{min-width:0}
+.editor{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0 0 6px}
+.editor .lbl{font-weight:700;color:var(--heading)}
+.chip{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:8px;background:var(--card);overflow:hidden}
+.chip span{font-family:var(--mono);font-size:12px;color:var(--muted);padding:0 4px 0 8px}
+.chip input{border:0;background:transparent;color:var(--ink);padding:6px 4px;width:14ch;min-width:6ch}
+.chip input:focus{outline:none}
+.chip:focus-within{box-shadow:0 0 0 2px var(--accent)}
+.chip button{border:0;background:transparent;color:var(--muted);font-size:18px;line-height:1;padding:4px 8px}
+.chip button:hover{color:var(--nullc);background:var(--null-l)}
+button.add{border:1px dashed var(--accent-m);background:var(--card);color:var(--accent);border-radius:8px;padding:6px 12px;font-size:14px}
+button.add:hover{background:var(--accent-l)}
+button.add:disabled{opacity:.4;cursor:not-allowed}
+.hint{font-size:14px;color:var(--muted);margin:0 0 14px}
+
+.mem{position:relative;overflow-x:auto;padding:6px 4px 14px;border-radius:12px;background:var(--surface)}
+.row{display:flex;align-items:flex-end;gap:78px;padding:8px 20px 4px;width:max-content;min-width:100%}
+.nodew{display:flex;flex-direction:column;align-items:center;gap:6px}
+.tags{display:flex;flex-direction:column-reverse;align-items:center;gap:4px;min-height:86px;justify-content:flex-start}
+.tag{font-family:var(--mono);font-size:13px;padding:2px 9px;border-radius:999px;border:1.5px solid var(--heading);color:var(--heading);background:var(--card);position:relative}
+.tag.nv{border-color:var(--line);color:var(--muted)}
+.tag.head{background:var(--accent-fill);border-color:var(--accent-fill);color:var(--on-accent);font-weight:700}
+.tag.current{border-color:var(--accent);color:var(--accent);font-weight:700}
+.tag.tail{border-color:var(--prevc);color:var(--prevc);font-weight:700}
+.tags .caret{color:var(--muted);font-size:12px;line-height:1;order:-1}
+.box{border:2px solid var(--heading);border-radius:10px;background:var(--card);min-width:190px;transition:opacity .25s}
+.box.ghost{border-style:dashed;border-color:var(--line);opacity:.55}
+.box.building{border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-l)}
+.boxhead{display:flex;justify-content:space-between;gap:10px;padding:5px 10px;border-bottom:1px solid var(--line);font-size:13px}
+.boxhead b{font-family:var(--serif);color:var(--heading);font-size:15px}
+.boxhead .addr{font-family:var(--mono);color:var(--muted)}
+.cells{display:grid;grid-template-columns:auto 1fr auto}
+.cell{padding:4px 10px 8px;text-align:center;border-right:1px solid var(--line);transition:background .25s}
+.cell:last-child{border-right:0}
+.cell small{display:block;font-size:11px;color:var(--muted);letter-spacing:.02em}
+.cell .v{font-size:15px;font-weight:700;white-space:nowrap;display:block;min-height:1.4em}
+.cell.data .v{color:var(--ink)}
+.cell .ptr{display:inline-block;width:12px;height:12px;border-radius:50%;margin-top:4px}
+.cell.next .ptr{background:var(--accent)} .cell.prev .ptr{background:var(--prevc)}
+.cell .none{font-family:var(--mono);font-style:italic;font-size:13px;color:var(--nullc)}
+.cell .unset{color:var(--muted);font-weight:400}
+.cell.flash{background:var(--accent-l)}
+.ghosttxt{padding:22px 12px;color:var(--muted);font-size:14px;text-align:center}
+svg.arrows{position:absolute;left:0;top:0;pointer-events:none;overflow:visible}
+.legend{display:flex;gap:18px;flex-wrap:wrap;margin:10px 0 0;font-size:14px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:22px;height:3px;border-radius:2px;display:inline-block}
+
+.controls{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:16px 0 8px}
+.btn{border:1px solid var(--primary);background:var(--card);color:var(--heading);border-radius:8px;padding:8px 16px;font-weight:700;font-size:15px}
+.btn:hover{background:var(--surface)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.primary{background:var(--primary);color:var(--on-primary)}
+.btn.primary:hover{background:var(--primary-h)}
+.btn.quiet{border-color:var(--line);color:var(--muted);font-weight:400}
+label.speed{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:15px;margin-left:4px}
+select{font:inherit;font-size:15px;padding:5px 8px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--ink)}
+.progress{margin-left:auto;color:var(--muted);font-size:15px}
+.narration{min-height:3.2em;margin:4px 0 0;padding:12px 14px;border-radius:10px;background:var(--surface);font-size:16px;max-width:86ch}
+
+.lower{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:24px;margin-top:24px}
+.lower h3{font-family:var(--serif);font-size:20px;color:var(--heading);margin:0 0 8px}
+table{border-collapse:collapse;font-size:15px;width:100%}
+th{background:var(--th);color:#fff;font-weight:700;text-align:left;padding:6px 10px;white-space:nowrap}
+td{padding:5px 10px;border-bottom:1px solid var(--line);white-space:nowrap;background:var(--card)}
+td.mono{font-family:var(--mono);font-size:13px}
+td .none{font-family:var(--mono);font-style:italic;color:var(--nullc)}
+tr.changed td{background:var(--accent-l)}
+pre.console{background:var(--code);color:var(--code-ink);font-family:var(--mono);font-size:13.5px;line-height:1.5;padding:12px 14px;border-radius:10px;margin:0;min-height:120px;max-height:330px;overflow:auto;white-space:pre-wrap}
+pre.console .fresh{background:rgba(245,192,74,.28);border-radius:3px}
+pre.console .dim{color:#8A7894;font-style:italic}
+.small{font-size:13px;color:var(--muted);margin:6px 0 0}
+
+@media (max-width:1000px){main{grid-template-columns:1fr}.sticky{position:static}pre.code{max-height:380px}.lower{grid-template-columns:1fr}.progress{margin-left:0;width:100%}}
+@media (prefers-reduced-motion:reduce){.cell,.box{transition:none}}
+
+main{grid-template-columns:minmax(320px,420px) minmax(0,1fr)}
+pre.code .ln.caller{background:rgba(245,192,74,.09);box-shadow:inset 4px 0 0 rgba(245,192,74,.45)}
+.chip b.op{font-family:var(--mono);font-size:14px;padding:6px 2px 6px 4px;color:var(--ink)}
+.chip input{width:8ch;font-family:var(--mono)}
+.chip .pushbtn{font-size:14px;font-weight:700;color:var(--accent);border-left:1px solid var(--line);padding:6px 10px}
+.chip .pushbtn:hover{background:var(--accent-l);color:var(--accent)}
+#adder{margin-top:4px}
+button.add{font-family:var(--mono)}
+.viz{display:grid;grid-template-columns:minmax(260px,330px) minmax(0,1fr);gap:22px;background:var(--surface);border-radius:12px;padding:16px 18px}
+.vt{font-family:var(--serif);font-size:17px;font-weight:700;color:var(--heading);margin:0 0 8px}
+.towerwrap{display:flex;flex-direction:column;align-items:center}
+.float{min-height:78px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:4px;padding-bottom:6px}
+.tower{position:relative;width:150px;min-height:240px;border:4px solid var(--heading);border-top:0;border-radius:0 0 14px 14px;display:flex;flex-direction:column-reverse;justify-content:flex-start;gap:6px;padding:8px;background:var(--card)}
+.tower.none{border-style:dashed;border-color:var(--line)}
+.item{height:40px;flex:none;border-radius:8px;background:var(--accent-l);border:2px solid var(--accent-m);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;position:relative;font-family:var(--mono)}
+.item.top{border-color:var(--accent)}
+.item .ix{position:absolute;left:-52px;font-size:12px;color:var(--muted);font-weight:400;width:40px;text-align:right}
+.item .toplab{position:absolute;left:calc(100% + 18px);white-space:nowrap;font-family:var(--sans);font-size:14px;color:var(--accent);font-weight:700}
+.item.fresh{animation:drop .5s ease-out}
+.item.peek{box-shadow:0 0 0 4px var(--accent-fill)}
+.item.gone{width:134px;background:var(--null-l);border:2px dashed var(--nullc);color:var(--nullc);animation:lift .5s ease-out}
+@keyframes drop{from{transform:translateY(-60px);opacity:0}}
+@keyframes lift{from{transform:translateY(90px);opacity:.3}}
+.emptylab{margin:auto;color:var(--muted);font-style:italic}
+.side{display:flex;flex-direction:column;gap:18px;min-width:0}
+.lcells{display:flex;flex-wrap:wrap;gap:0;margin-bottom:8px}
+.lc{display:flex;flex-direction:column;align-items:center;min-width:54px;border:2px solid var(--heading);margin-left:-2px;background:var(--card)}
+.lc:first-child{margin-left:0}
+.lc small{font-family:var(--mono);font-size:12px;color:var(--muted);padding:2px 0}
+.lc small.neg{color:var(--prevc)}
+.lc b{font-family:var(--mono);font-size:16px;padding:4px 8px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);width:100%;text-align:center}
+.lc.fresh b{background:var(--accent-l)} .lc.peek b{background:var(--accent-fill);color:var(--on-accent)}
+.lc.emptyc{border-style:dashed;border-color:var(--line)}
+.repr{display:inline-block;font-size:14px}
+.dim2{color:var(--muted);font-style:italic}
+.idxnote{font-size:13px;color:var(--muted);margin:4px 0 0}
+.idxnote b{color:var(--prevc)}
+.frames{display:flex;flex-direction:column-reverse;gap:4px;max-width:340px}
+.frame{border:2px solid var(--line);border-radius:8px;padding:6px 10px;font-family:var(--mono);font-size:14px;background:var(--card);color:var(--muted)}
+.frame.active{border-color:var(--heading);color:var(--heading);font-weight:700;box-shadow:0 0 0 3px var(--accent-l)}
+tr.sub td{background:var(--surface);font-size:13px;color:var(--muted);font-weight:700}
+@media (max-width:700px){.viz{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){.item.fresh,.item.gone{animation:none}}
+/* linked-list stack */
+header p code{background:rgba(255,255,255,.14);color:#fff}
+.viz{grid-template-columns:minmax(300px,370px) minmax(0,1fr)}
+.chainv{display:grid;grid-template-columns:auto auto;column-gap:10px;justify-content:center;align-items:center;padding:4px 0 6px}
+.chainv .lab{justify-self:end;font-family:var(--mono);font-size:13px;white-space:nowrap}
+.chainv .lab .tag{display:inline-block}
+.chainv .slot{justify-self:start}
+.nbox{border:2px solid var(--heading);border-radius:10px;background:var(--card);width:176px}
+.nbox.top{box-shadow:0 0 0 4px var(--accent-l);border-color:var(--accent)}
+.nbox.building{border-style:dashed;border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-l)}
+.nbox.fresh{animation:drop .5s ease-out}
+.nbox.gone{border-style:dashed;border-color:var(--nullc);background:var(--null-l);opacity:.85}
+.nbox .nh{display:flex;justify-content:space-between;padding:3px 9px;border-bottom:1px solid var(--line);font-size:12px}
+.nbox .nh b{font-family:var(--serif);color:var(--heading);font-size:14px}
+.nbox .nh .addr{font-family:var(--mono);color:var(--muted)}
+.nbox .ncells{display:grid;grid-template-columns:1fr 1fr}
+.nbox .cell{padding:3px 8px 6px;font-family:var(--mono)}
+.nbox .cell .v{font-size:15px}
+.nbox .cell.next .v{font-size:13px;color:var(--accent)}
+.addr2{font-family:var(--mono)}
+.linkv{font-size:20px;line-height:1;color:var(--accent);text-align:center;padding:3px 0;font-weight:700}
+.linkv.dash{color:var(--nullc);opacity:.8}
+.nonebox{font-family:var(--mono);font-style:italic;color:var(--nullc);border:2px dashed var(--nullc);border-radius:8px;padding:3px 14px;background:var(--null-l)}
+.hrow{display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-bottom:8px;font-family:var(--mono);font-size:14px}
+.hn{display:inline-flex;border:2px solid var(--heading);border-radius:6px;background:var(--card);overflow:hidden}
+.hn span{padding:3px 8px}
+.hn span+span{border-left:1px solid var(--line);color:var(--accent);min-width:22px;text-align:center}
+.hn.top{border-color:var(--accent)}
+.hn.fl{border-style:dashed;border-color:var(--accent)}
+.harr{color:var(--accent);font-weight:700}
+.hnone{font-style:italic;color:var(--nullc)}
+.hlab{color:var(--heading);font-weight:700}
+@media (prefers-reduced-motion:reduce){.nbox.fresh{animation:none}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Linked List Stack Explorer</h1>
+  <p>Step through a stack built from linked nodes, line by line. Watch each new node point at the old top, and watch <code>self.top</code> move. Change the program below with your own pushes and pops, and the code rewrites itself.</p>
+  <nav class="picker" id="picker" aria-label="Jump to a line of the main program"></nav>
+</header>
+
+<main>
+  <aside>
+    <div class="sticky">
+      <h2 id="secname"></h2>
+      <pre class="code" id="code" aria-label="Python program"></pre>
+      <p class="tip" id="tip"></p>
+    </div>
+  </aside>
+
+  <div class="stage-wrap">
+    <div class="editor" id="editor"></div>
+    <div class="editor" id="adder"></div>
+    <p class="hint">Numbers are pushed as numbers and anything else as a string. Use the ← and → keys to step.</p>
+
+    <div class="viz">
+      <div class="towerwrap">
+        <p class="vt">The stack (top is at the top)</p>
+        <div class="chainv" id="chain"></div>
+      </div>
+      <div class="side">
+        <div>
+          <p class="vt">The same nodes, left to right</p>
+          <div id="listv"></div>
+          <p class="idxnote">Each box is <b>[data | next]</b>. There are no indexes: the only way in is through <code>s.top</code>, then follow <code>next</code> until <code>None</code>.</p>
+        </div>
+        <div>
+          <p class="vt">Call stack</p>
+          <div class="frames" id="frames"></div>
+          <p class="idxnote">Python tracks method calls with a stack too: each call goes on top and comes off when it returns.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="btn" id="back">Back</button>
+      <button class="btn primary" id="play">Play</button>
+      <button class="btn" id="step">Step</button>
+      <button class="btn" id="end">Run to end</button>
+      <label class="speed">Speed
+        <select id="speed"><option value="1500">Slow</option><option value="850" selected>Normal</option><option value="400">Fast</option><option value="150">Very fast</option></select>
+      </label>
+      <button class="btn quiet" id="restart">Restart</button>
+      <span class="progress" id="progress"></span>
+    </div>
+    <p class="narration" id="narr" aria-live="polite"></p>
+
+    <div class="lower">
+      <section>
+        <h3>Variables</h3>
+        <div id="vars"></div>
+        <p class="small">The addresses are examples. Your own run will use different ones (see them with <code>id()</code> or <code>hex(id(node))</code>).</p>
+      </section>
+      <section>
+        <h3>Output</h3>
+        <pre class="console" id="out"></pre>
+      </section>
+    </div>
+  </div>
+</main>
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const S_ID = '0x7f2c10';
+const U = '__unset__';
+const DEFAULT_OPS = [{k:'push', v:'10'}, {k:'push', v:'20'}, {k:'push', v:'30'}, {k:'peek'}, {k:'pop'}, {k:'peek'}];
+let ops = JSON.parse(JSON.stringify(DEFAULT_OPS));
+const MAXOPS = 16;
+const isNum = v => /^-?\d+(\.\d+)?$/.test(String(v).trim());
+const lit = v => isNum(v) ? String(v).trim() : `"${v}"`;
+const addr = k => '0x' + (0x7f40 + k * 0x30).toString(16);
+const opLabel = o => o.k === 'push' ? `push(${lit(o.v)})` : `${o.k}()`;
+const opCode = o => o.k === 'peek' ? 'print("Top element is:", s.peek())' : o.k === 'is_empty' ? 'print(s.is_empty())' : `s.${opLabel(o)}`;
+
+const TIPS = {
+  create:'<strong>Key idea:</strong> no list here. The stack only remembers one thing, <code>self.top</code>, a reference to the top node. An empty stack has <code>self.top = None</code>.',
+  push:'<strong>Key idea:</strong> push is three moves in this order: make the node, point its <code>next</code> at the old top, then make it the new top. Swap the last two and the new node would point at itself, losing the rest of the stack. Push is O(1): no matter how big the stack, it is always three steps.',
+  pop:'<strong>Key idea:</strong> pop never deletes anything directly. It just moves <code>self.top</code> down one node. The old top is no longer reachable from any variable, so Python frees it for you. Try adding extra pops to see the underflow check.',
+  peek:'<strong>Watch for:</strong> on an empty stack, <code>peek</code> prints a message but has no <code>return</code>, so it returns <code>None</code>. The outer <code>print</code> then shows <code>Top element is: None</code>. Add pops until the stack is empty, then peek, to see it.',
+  is_empty:'<strong>Key idea:</strong> the stack is empty exactly when <code>self.top is None</code>. Use <code>is None</code> (identity) rather than <code>== None</code> to check for None.',
+};
+
+/* ---------- code ---------- */
+let CODE, LINE;
+function buildCode() {
+  const L = [], idx = {};
+  const A = (t, k) => { if (k) idx[k] = L.length; L.push(t); };
+  A('#Stack - Linked List');
+  A('class Node:');
+  A('    def __init__(self, data):', 'nInit');
+  A('        self.data = data', 'nData');
+  A('        self.next = None', 'nNext');
+  A('');
+  A('class Stack:');
+  A('    def __init__(self):', 'sInit');
+  A('        self.top = None', 'sTop');
+  A('');
+  A('    def push(self,data):', 'push');
+  A('        new_node = Node(data)', 'pushN');
+  A('        new_node.next = self.top', 'pushL');
+  A('        self.top = new_node', 'pushT');
+  A('        print(f"Pushed: {data}")', 'pushP');
+  A('');
+  A('    def is_empty(self):', 'ie');
+  A('        return self.top is None', 'ieR');
+  A('');
+  A('    def pop(self):', 'pop');
+  A('        if self.is_empty():', 'popIf');
+  A('            print("Stack Underflow! Nothing to Pop")', 'popU');
+  A('            return', 'popRet');
+  A('        popped_data = self.top.data', 'popD');
+  A('        self.top = self.top.next', 'popT');
+  A('        print(f"Popped Data: {popped_data}")', 'popP');
+  A('        return popped_data', 'popR');
+  A('');
+  A('    def peek(self):', 'peek');
+  A('        if self.is_empty():', 'peekIf');
+  A('            print("stack is Empty")', 'peekE');
+  A('        else:', 'peekElse');
+  A('            return self.top.data', 'peekR');
+  A('');
+  A('s = Stack()', 'd0');
+  ops.forEach((o, i) => A(opCode(o), 'd' + (i + 1)));
+  CODE = L; LINE = idx;
+}
+
+/* ---------- trace ---------- */
+let STEPS, SEC_START;
+function buildTrace() {
+  buildCode();
+  const S = {obj:false, attr:false, gS:false, nodes:{}, top:null, floatId:null, goneId:null, fresh:null, hl:null,
+             frames:[{fn:'<module>', loc:{}}], out:''};
+  const steps = [], secStart = {};
+  const clone = o => JSON.parse(JSON.stringify(o));
+  let sec = 0, caller = null, kind = 'create', nodeCount = 0;
+  const P = (key, narr, extra = {}) => {
+    if (!(sec in secStart)) secStart[sec] = steps.length;
+    const prevOut = steps.length ? steps[steps.length - 1].st.out.length : 0;
+    steps.push({line:LINE[key], caller: key === 'd' + sec ? null : caller, sec, kind, narr, st:clone(S), fresh:S.out.length - prevOut, changed:extra.changed || null});
+    S.hl = null; S.fresh = null;
+  };
+  const out = t => { S.out += t; };
+  const top = () => S.frames[S.frames.length - 1];
+  const enter = (fn, loc, self = 's') => S.frames.push({fn, loc:{self, ...loc}});
+  const leave = () => S.frames.pop();
+  const A = id => `<code>${addr(id)}</code>`;
+  const isEmpty = () => {
+    enter('Stack.is_empty', {});
+    P('ie', '<code>self.is_empty()</code> is called. A new frame for <code>is_empty</code> goes on top of the call stack.');
+    const r = S.top === null;
+    P('ieR', r ? '<code>self.top</code> is <code>None</code>, so <code>self.top is None</code> is <strong>True</strong>. The stack is empty.'
+               : `<code>self.top</code> refers to the node at ${A(S.top)}, not <code>None</code>, so <code>self.top is None</code> is <strong>False</strong>.`);
+    leave();
+    return r;
+  };
+
+  // s = Stack()
+  sec = 0; kind = 'create'; caller = LINE.d0;
+  S.obj = true; enter('Stack.__init__', {});
+  P('d0', `<code>Stack()</code> creates a new Stack object (at <code>${S_ID}</code>) and calls its <code>__init__</code>.`);
+  P('sInit', '<code>__init__(self)</code>: <code>self</code> is the brand new Stack object.');
+  S.attr = true; P('sTop', '<code>self.top = None</code>. There are no nodes yet, so the top refers to nothing.', {changed:'s.top'});
+  leave(); S.gS = true;
+  P('d0', '<code>__init__</code> finishes, and <code>s</code> now refers to the new, empty stack.', {changed:'s'});
+
+  ops.forEach((o, i) => {
+    sec = i + 1; kind = o.k; caller = LINE['d' + sec];
+    const d = 'd' + sec;
+    if (o.k === 'push') {
+      const v = String(o.v), L = esc(lit(v));
+      enter('Stack.push', {data:v});
+      P(d, `<code>s.push(${L})</code> calls <code>push</code> with <code>data = ${L}</code>.`);
+      P('push', `Inside <code>push</code>: <code>self</code> is <code>s</code> and <code>data</code> is ${L}.`, {changed:'data'});
+      P('pushN', 'First, build a new node. <code>Node(data)</code> is called.');
+      const id = nodeCount++;
+      S.nodes[id] = {data:U, next:U}; S.floatId = id; S.fresh = id;
+      enter('Node.__init__', {data:v}, addr(id));
+      P('nInit', `Python creates an empty Node object at ${A(id)} and runs <code>Node.__init__</code>. Here <code>self</code> is the new node, not the stack.`);
+      S.nodes[id].data = v; S.hl = {id, f:'data'};
+      P('nData', `<code>self.data = data</code> stores ${L} in the node.`);
+      S.nodes[id].next = null; S.hl = {id, f:'next'};
+      P('nNext', '<code>self.next = None</code>. The node is not linked to anything yet.');
+      leave(); top().loc.new_node = id;
+      P('pushN', `<code>Node.__init__</code> finishes. The local variable <code>new_node</code> now refers to the node at ${A(id)}. It is not part of the stack yet.`, {changed:'new_node'});
+      const old = S.top;
+      S.nodes[id].next = old; S.hl = {id, f:'next'};
+      P('pushL', old === null
+        ? '<code>new_node.next = self.top</code>. The stack is empty, so <code>self.top</code> is <code>None</code> and <code>next</code> stays <code>None</code>. This node will be the bottom of the stack.'
+        : `<code>new_node.next = self.top</code>. The new node now points down at the current top node (${A(old)}, holding ${esc(lit(S.nodes[old].data))}). The old stack is safely hanging below it.`);
+      S.top = id; S.floatId = null;
+      P('pushT', `<code>self.top = new_node</code>. The top moves up to the new node, so ${L} is now on top. Nothing else in the stack moved.`, {changed:'s.top'});
+      out(`Pushed: ${v}\n`);
+      P('pushP', 'The f-string fills in <code>{data}</code> and prints the message.');
+      leave();
+      P(d, '<code>push</code> finishes. The local <code>new_node</code> disappears, but the node itself lives on because <code>s.top</code> still refers to it.');
+    } else if (o.k === 'pop') {
+      enter('Stack.pop', {});
+      P(d, '<code>s.pop()</code> calls <code>pop</code>.');
+      P('pop', 'Inside <code>pop</code>.');
+      P('popIf', 'Before touching <code>self.top</code>, <code>pop</code> checks whether the stack is empty.');
+      const e = isEmpty();
+      if (e) {
+        P('popIf', '<code>is_empty()</code> returned True, so the <code>if</code> branch runs.');
+        out('Stack Underflow! Nothing to Pop\n');
+        P('popU', 'Popping an empty stack is called <strong>underflow</strong>. Without this check, <code>self.top.data</code> would crash with <code>AttributeError: \'NoneType\' object has no attribute \'data\'</code>.');
+        P('popRet', 'A bare <code>return</code> leaves the method early and returns <code>None</code>. The lines below are skipped.');
+        leave();
+        P(d, '<code>pop</code> finishes without changing anything.');
+      } else {
+        P('popIf', '<code>is_empty()</code> returned False, so the <code>if</code> body is skipped.');
+        const t = S.top, v = S.nodes[t].data;
+        top().loc.popped_data = v; S.hl = {id:t, f:'data'};
+        P('popD', `<code>self.top.data</code> is ${esc(lit(v))}. Save it in <code>popped_data</code> before moving the top, or we would lose it.`, {changed:'popped_data'});
+        S.top = S.nodes[t].next; S.goneId = t;
+        P('popT', S.top === null
+          ? '<code>self.top = self.top.next</code>. The old top\'s <code>next</code> was <code>None</code>, so the stack is now empty. The old node still exists, but no variable refers to it any more.'
+          : `<code>self.top = self.top.next</code>. The top moves down to ${A(S.top)}, holding ${esc(lit(S.nodes[S.top].data))}. The old top still points down too, but nothing points to <em>it</em> any more.`, {changed:'s.top'});
+        out(`Popped Data: ${v}\n`);
+        P('popP', 'Prints the value that was removed.');
+        P('popR', `<code>return popped_data</code> hands ${esc(lit(v))} back to the caller. This line ignores it, but <code>x = s.pop()</code> would keep it.`);
+        leave(); S.goneId = null; delete S.nodes[t];
+        P(d, `<code>pop</code> finishes. The node at ${A(t)} is unreachable, so Python's garbage collector frees it. Last in, first out.`);
+      }
+    } else if (o.k === 'peek') {
+      P(d, 'Before <code>print</code> can run, Python has to evaluate its arguments, so <code>s.peek()</code> is called first.');
+      enter('Stack.peek', {});
+      P('peek', 'Inside <code>peek</code>.');
+      P('peekIf', '<code>peek</code> also checks for an empty stack first.');
+      const e = isEmpty();
+      if (e) {
+        P('peekIf', '<code>is_empty()</code> returned True, so the <code>if</code> branch runs.');
+        out('stack is Empty\n');
+        P('peekE', 'Prints the empty message. There is no <code>return</code> after it.');
+        leave();
+        out('Top element is: None\n');
+        P(d, '<code>peek</code> reached its end without a <code>return</code>, so it returned <code>None</code>. The outer <code>print</code> shows <code>Top element is: None</code>.');
+      } else {
+        P('peekIf', '<code>is_empty()</code> returned False, so Python goes to <code>else</code>.');
+        P('peekElse', 'The stack has at least one node.');
+        const v = S.nodes[S.top].data; S.hl = {id:S.top, f:'data'};
+        P('peekR', `<code>self.top.data</code> is ${esc(lit(v))}. It is returned, not removed: <code>self.top</code> does not move.`);
+        leave();
+        out(`Top element is: ${v}\n`);
+        P(d, `<code>peek()</code> returned ${esc(lit(v))}, and <code>print</code> shows it after the label, separated by a space.`);
+      }
+    } else if (o.k === 'is_empty') {
+      P(d, 'Python evaluates the inner call <code>s.is_empty()</code> first, then prints whatever it returns.');
+      const e = isEmpty();
+      out(`${e ? 'True' : 'False'}\n`);
+      P(d, `<code>is_empty()</code> returned ${e ? 'True' : 'False'}, and <code>print()</code> shows it.`);
+    }
+  });
+  STEPS = steps; SEC_START = secStart;
+}
+
+/* ---------- rendering ---------- */
+function pyHtml(line) {
+  let inStr = false, cut = -1;
+  for (let i = 0; i < line.length; i++) { if (line[i] === '"') inStr = !inStr; else if (line[i] === '#' && !inStr) { cut = i; break; } }
+  const code = cut >= 0 ? line.slice(0, cut) : line, cm = cut >= 0 ? line.slice(cut) : '';
+  const parts = code.split(/(f?"[^"]*")/);
+  const h = parts.map((p, k) => k % 2 ? `<span class="str">${esc(p)}</span>` :
+    esc(p).replace(/\b(class|def|if|is|else|return|None|self)\b/g, '<span class="kw">$1</span>').replace(/\b(print)\b/g, '<span class="bi">$1</span>')).join('');
+  return h + (cm ? `<span class="cm">${esc(cm)}</span>` : '');
+}
+function renderCode() { $('code').innerHTML = CODE.map((l, i) => `<span class="ln" data-l="${i}"><span class="no">${i + 1}</span>${pyHtml(l)}</span>`).join(''); }
+function renderPicker() {
+  $('picker').innerHTML = [`<button data-s="0">s = Stack()</button>`, ...ops.map((o, i) => `<button data-s="${i + 1}">${esc(opLabel(o))}</button>`)].join('');
+}
+function renderEditor() {
+  const nextVal = (() => { const n = ops.filter(o => o.k === 'push' && isNum(o.v)).map(o => +o.v); return n.length ? Math.max(...n) + 10 : 10; })();
+  $('editor').innerHTML = `<span class="lbl">Program</span>` +
+    ops.map((o, i) => `<span class="chip"><span>${i + 1}</span><b class="op">${esc(opLabel(o))}</b><button data-rm="${i}" aria-label="Remove ${esc(opLabel(o))}">×</button></span>`).join('');
+  $('adder').innerHTML = `<span class="lbl">Add</span>
+    <span class="chip"><input id="pushVal" value="${nextVal}" maxlength="12" aria-label="Value to push"><button class="pushbtn" data-add="push">push</button></span>
+    <button class="add" data-add="pop">pop()</button><button class="add" data-add="peek">peek()</button>
+    <button class="add" data-add="is_empty">is_empty()</button>
+    <button class="add" id="resetOps">Reset to original</button>`;
+  $('adder').querySelectorAll('[data-add]').forEach(b => b.disabled = ops.length >= MAXOPS);
+}
+
+function chainOf(st) { const a = [], seen = new Set(); let c = st.top; while (c !== null && !seen.has(c)) { seen.add(c); a.push(c); c = st.nodes[c].next; } return a; }
+function valHtml(v) { return v === U ? '<span class="unset">—</span>' : esc(v); }
+function nextHtml(n) { return n === U ? '<span class="unset">—</span>' : n === null ? '<span class="none">None</span>' : `<span class="addr2">${addr(n)}</span>`; }
+function nodeBox(st, id, cls) {
+  const nd = st.nodes[id], hl = st.hl && st.hl.id === id ? st.hl.f : '';
+  return `<div class="nbox ${cls}${st.fresh === id ? ' fresh' : ''}"><div class="nh"><b>Node</b><span class="addr">${addr(id)}</span></div>
+    <div class="ncells"><div class="cell data${hl === 'data' ? ' flash' : ''}"><small>data</small><span class="v">${valHtml(nd.data)}</span></div>
+    <div class="cell next${hl === 'next' ? ' flash' : ''}"><small>next</small><span class="v">${nextHtml(nd.next)}</span></div></div></div>`;
+}
+
+let pos = 0, timer = null;
+function render() {
+  const Sx = STEPS[pos], st = Sx.st;
+  document.querySelectorAll('#code .ln.now, #code .ln.caller').forEach(e => e.classList.remove('now', 'caller'));
+  const ln = document.querySelector(`#code .ln[data-l="${Sx.line}"]`);
+  if (Sx.caller !== null && Sx.caller !== undefined) { const c = document.querySelector(`#code .ln[data-l="${Sx.caller}"]`); if (c) c.classList.add('caller'); }
+  if (ln) { ln.classList.add('now'); const pre = $('code'); pre.scrollTop = Math.max(0, ln.getBoundingClientRect().top - pre.getBoundingClientRect().top + pre.scrollTop - pre.clientHeight / 2 + 10); }
+  $('secname').textContent = Sx.sec === 0 ? 's = Stack()' : opCode(ops[Sx.sec - 1]);
+  $('tip').innerHTML = TIPS[Sx.kind];
+  document.querySelectorAll('#picker button').forEach(b => b.setAttribute('aria-pressed', +b.dataset.s === Sx.sec));
+
+  // vertical chain
+  const chain = chainOf(st);
+  let h = '';
+  const row = (lab, slot) => `<div class="lab">${lab}</div><div class="slot">${slot}</div>`;
+  const link = dash => row('', `<div class="nbox" style="border:0;background:none;box-shadow:none"><div class="linkv${dash ? ' dash' : ''}">↓</div></div>`);
+  if (!st.attr) h = `<div class="emptylab" style="grid-column:1/-1;padding:40px 0">${st.obj ? 'no self.top yet' : 'no Stack object yet'}</div>`;
+  else {
+    if (st.floatId !== null) {
+      h += row('<span class="tag current">new_node</span>', nodeBox(st, st.floatId, 'building'));
+      const nx = st.nodes[st.floatId].next;
+      if (nx !== U && nx !== null) h += link(false);
+      else h += row('', '<div style="height:14px"></div>');
+    }
+    if (st.goneId !== null) { h += row('<span class="tag nv">old top</span>', nodeBox(st, st.goneId, 'gone')); h += link(true); }
+    if (!chain.length) h += row('<span class="tag head">s.top</span>', '<span class="nonebox">None</span>');
+    chain.forEach((id, i) => {
+      h += row(i === 0 ? '<span class="tag head">s.top</span>' : '', nodeBox(st, id, i === 0 ? 'top' : ''));
+      h += link(false);
+      if (i === chain.length - 1) h += row('', '<span class="nonebox">None</span>');
+    });
+  }
+  $('chain').innerHTML = h;
+
+  // horizontal view
+  const hn = (id, cls) => `<span class="hn ${cls}"><span>${valHtml(st.nodes[id].data)}</span><span>${st.nodes[id].next === U ? '—' : st.nodes[id].next === null ? '∅' : '•'}</span></span>`;
+  let lv = '';
+  if (!st.attr) lv = '<span class="dim2">not created yet</span>';
+  else {
+    lv = `<div class="hrow"><span class="hlab">s.top</span><span class="harr">→</span>` +
+      chain.map((id, i) => hn(id, i === 0 ? 'top' : '') + '<span class="harr">→</span>').join('') + '<span class="hnone">None</span></div>';
+    if (st.floatId !== null) {
+      const nx = st.nodes[st.floatId].next;
+      lv += `<div class="hrow"><span class="hlab">new_node</span><span class="harr">→</span>${hn(st.floatId, 'fl')}` +
+        (nx !== U && nx !== null ? `<span class="harr">→</span><span class="dim2">the node at ${addr(nx)}</span>` : '') + '</div>';
+    }
+    lv += `<code class="repr">${chain.length} node${chain.length === 1 ? '' : 's'} reachable from s.top</code>`;
+  }
+  $('listv').innerHTML = lv;
+
+  // call stack
+  const sig = f => f.fn === '<module>' ? '&lt;module&gt; (main program)' : f.fn === 'Stack.push' || f.fn === 'Node.__init__' ? `${f.fn}(self, data)` : `${f.fn}(self)`;
+  $('frames').innerHTML = st.frames.map((f, i) => `<div class="frame${i === st.frames.length - 1 ? ' active' : ''}">${sig(f)}</div>`).join('');
+
+  // variables
+  const rows = [], ref = v => v === null ? '<span class="none">None</span>' : `node at ${addr(v)}`;
+  if (st.gS) rows.push(`<tr class="${Sx.changed === 's' ? 'changed' : ''}"><td class="mono">s</td><td>Stack object</td><td class="mono">${S_ID}</td></tr>`);
+  const f = st.frames[st.frames.length - 1];
+  if (f.fn !== '<module>') {
+    rows.push(`<tr class="sub"><td colspan="3">Local variables in ${esc(f.fn)}()</td></tr>`);
+    const isNode = f.fn === 'Node.__init__';
+    rows.push(`<tr><td class="mono">self</td><td>${isNode ? 'the new Node object' : st.gS ? 'same object as s' : 'the new Stack object'}</td><td class="mono">${isNode ? f.loc.self : S_ID}</td></tr>`);
+    Object.entries(f.loc).forEach(([k, v]) => {
+      if (k === 'self') return;
+      const node = k === 'new_node';
+      rows.push(`<tr class="${Sx.changed === k ? 'changed' : ''}"><td class="mono">${k}</td><td class="mono">${node ? 'Node object' : esc(lit(v))}</td><td class="mono">${node ? addr(v) : ''}</td></tr>`);
+    });
+  }
+  if (st.attr) rows.push(`<tr class="${Sx.changed === 's.top' ? 'changed' : ''}"><td class="mono">s.top</td><td>${ref(st.top)}</td><td class="mono">${st.top === null ? '' : addr(st.top)}</td></tr>`);
+  if (st.attr && st.top !== null) rows.push(`<tr><td class="mono">s.top.data</td><td class="mono">${valHtml(st.nodes[st.top].data)}</td><td></td></tr>`);
+  $('vars').innerHTML = rows.length ? `<table><thead><tr><th>Name</th><th>Value</th><th>Address</th></tr></thead><tbody>${rows.join('')}</tbody></table>` : '<p class="small" style="margin:0">No variables yet.</p>';
+
+  const o = st.out, k = o.length - Sx.fresh;
+  $('out').innerHTML = o ? esc(o.slice(0, k)) + (Sx.fresh ? `<span class="fresh">${esc(o.slice(k))}</span>` : '') : '<span class="dim">Nothing printed yet.</span>';
+  $('out').scrollTop = $('out').scrollHeight;
+
+  $('narr').innerHTML = Sx.narr;
+  $('progress').textContent = `Step ${pos + 1} of ${STEPS.length}`;
+  $('back').disabled = pos === 0;
+  $('play').textContent = timer ? 'Pause' : (pos >= STEPS.length - 1 ? 'Replay' : 'Play');
+}
+
+/* ---------- controls ---------- */
+function stop() { clearInterval(timer); timer = null; }
+function go(p) { pos = Math.max(0, Math.min(STEPS.length - 1, p)); render(); }
+function stepOnce() { if (pos >= STEPS.length - 1) { stop(); render(); return; } go(pos + 1); if (pos >= STEPS.length - 1) { stop(); render(); } }
+$('step').onclick = () => { stop(); stepOnce(); };
+$('back').onclick = () => { stop(); go(pos - 1); };
+$('end').onclick = () => { stop(); go(STEPS.length - 1); };
+$('restart').onclick = () => { stop(); go(0); };
+$('play').onclick = () => {
+  if (timer) { stop(); render(); return; }
+  if (pos >= STEPS.length - 1) { pos = 0; render(); }
+  timer = setInterval(stepOnce, +$('speed').value); render();
+};
+$('speed').onchange = () => { if (timer) { stop(); timer = setInterval(stepOnce, +$('speed').value); render(); } };
+document.addEventListener('keydown', e => {
+  if (e.target.matches('input, select')) return;
+  if (e.key === 'ArrowRight') { e.preventDefault(); stop(); stepOnce(); }
+  if (e.key === 'ArrowLeft') { e.preventDefault(); stop(); go(pos - 1); }
+});
+$('picker').onclick = e => { const b = e.target.closest('button'); if (!b) return; stop(); const p = SEC_START[+b.dataset.s]; if (p !== undefined) go(p); };
+
+function rebuild(goSec) {
+  stop(); buildTrace(); renderCode(); renderPicker(); renderEditor();
+  pos = goSec !== undefined && SEC_START[goSec] !== undefined ? SEC_START[goSec] : 0;
+  render();
+}
+$('editor').addEventListener('click', e => { const rm = e.target.closest('[data-rm]'); if (rm) { ops.splice(+rm.dataset.rm, 1); rebuild(); } });
+function addOp(k) {
+  if (ops.length >= MAXOPS) return;
+  if (k === 'push') { const v = ($('pushVal').value || '').replace(/["'\\{}]/g, '').trim(); if (!v) return; ops.push({k, v}); }
+  else ops.push({k});
+  rebuild(ops.length);
+}
+$('adder').addEventListener('click', e => {
+  const b = e.target.closest('[data-add]'); if (b) { addOp(b.dataset.add); return; }
+  if (e.target.id === 'resetOps') { ops = JSON.parse(JSON.stringify(DEFAULT_OPS)); rebuild(); }
+});
+$('adder').addEventListener('keydown', e => { if (e.target.id === 'pushVal' && e.key === 'Enter') { e.preventDefault(); addOp('push'); } });
+rebuild();
+</script>
+</body>
+</html>
